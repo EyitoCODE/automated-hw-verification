@@ -1,0 +1,14 @@
+# EDA Tool Artifacts
+*.jou
+*.log
+*.pb
+*.wdb
+*.str
+.Xil/
+xsim.dir/
+modelsim.ini
+transcript
+
+# Generated Reports (Keep the directory, ignore the dynamic contents)
+reports/*
+!reports/.keep
