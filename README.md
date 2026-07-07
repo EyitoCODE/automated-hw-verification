@@ -1,6 +1,6 @@
 # Automated Hardware Verification Pipeline
 
-![Verification Pipeline Demo](docs\hw_verification_demo.gif)
+![Verification Pipeline Demo](docs/hw_verification_demo.gif)
 
 ## Overview
 An end-to-end automated testing and verification pipeline for an optoelectronic signal filter. The module is designed in Verilog, simulated via Tcl automation, and analyzed using Perl to generate HTML compliance reports. 
