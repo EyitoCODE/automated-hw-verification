@@ -1,43 +1,49 @@
 # Automated Hardware Verification Pipeline
 
-![Verification Pipeline Demo](docs/hw_verification_demo.gif)
+A reproducible Verilog → Tcl → Perl workflow for an 8-bit threshold filter.
+It compiles RTL, runs a self-checking testbench, and produces an HTML report.
+Failures propagate to the shell and GitHub Actions.
 
-![Verification Pipeline Demo](docs/report.png)
+## Run
 
-## Overview
-An end-to-end automated testing and verification pipeline for an optoelectronic signal filter. The module is designed in Verilog, simulated via Tcl automation, and analyzed using Perl to generate HTML compliance reports. 
+Requires Icarus Verilog (iverilog and vvp), Tcl 8.6+, and Perl.
+On Ubuntu: `sudo apt-get install iverilog tcl perl`.
 
-This project bridges hardware description and software automation, demonstrating core continuous integration (CI) principles for FPGA and ASIC development environments.
-
-## The Engineering Challenge
-**Problem:** Manual verification of HDL modules is prone to human error, fails to easily capture edge-case regressions, and scales poorly in continuous integration environments. 
-
-**Solution:** Architected a zero-touch verification pipeline.
-- **EDA Automation:** Engineered **Tcl** scripts to natively manipulate the Icarus Verilog simulation environment, eliminating GUI overhead and standardizing test execution.
-- **Data Extraction:** Deployed **Perl** scripts utilizing advanced regular expressions to parse raw simulation telemetry, extracting critical timing and logic state data.
-- **Automated Reporting:** The pipeline culminates in an auto-generated HTML pass/fail matrix, translating complex diagnostic data into clear performance metrics.
-
-## Advanced Test Coverage
-The testbench is designed to push the hardware beyond standard "happy path" compliance, validating against real-world hardware anomalies:
-1. **Standard Compliance:** Validates high/low signal triggers against hexadecimal thresholds.
-2. **Sustained Optical Bursts:** Ensures the module holds valid flags open during multi-cycle signal saturation.
-3. **Asynchronous Reset Overrides:** Proves the system safely drops to zero during a hardware reset, even if a valid signal is actively saturating the input.
-4. **High-Frequency Noise:** Feeds the module rapid fluctuations of sub-threshold noise to verify resistance to false positives.
-
-## Technology Stack
-* **Hardware Description:** Verilog (Icarus Verilog / `iverilog`)
-* **Automation Driver:** Tcl (`tclsh`)
-* **Data Parsing:** Perl 
-* **Version Control & OS:** Git / Linux (WSL)
-
-## How to Execute
-To run this pipeline locally and generate the verification report:
 ```bash
-# 1. Clone the repository
-git clone [https://github.com/EyitoCODE/automated-hw-verification.git](https://github.com/EyitoCODE/automated-hw-verification.git)
-
-# 2. Navigate to the directory
+git clone https://github.com/EyitoCODE/automated-hw-verification.git
 cd automated-hw-verification
-
-# 3. Execute the automation pipeline
 tclsh scripts/run_sim.tcl
+```
+
+The script creates `reports/` automatically and works when invoked by absolute
+path from another directory. Open `reports/index.html`; raw output is in
+`reports/sim.log`. Exit status is nonzero for compilation, simulation, parser,
+failed checks, empty logs, duplicate checks, or incomplete runs.
+
+## What is verified
+
+The RTL passes input values strictly greater than 0x32 (decimal 50); other
+values produce zero output and an invalid flag. Reset is **synchronous**.
+
+Fourteen cycle-level checks cover reset, zero input, threshold boundaries
+(49, 50, 51), maximum input, sustained valid input, reset during a strong signal,
+recovery, and multiple sub-threshold noise values. Each check verifies both
+the output data and the valid flag, using case equality to catch unknown states.
+
+## Continuous integration
+
+GitHub Actions installs the simulator, runs verification and failure-path
+regression tests, and uploads the log and HTML report even when a run fails.
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+The regression suite also mutates the threshold in a temporary copy to verify
+that incorrect RTL causes a failing process exit and a failing report.
+
+## Scope
+
+This is a digital simulation and automation demonstration. It has not been
+synthesized, run on an FPGA, or validated against a physical optical sensor.
+The test count is directed coverage, not exhaustive functional or code coverage.

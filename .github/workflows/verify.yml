@@ -1,0 +1,23 @@
+name: Hardware verification
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install simulator
+        run: sudo apt-get update && sudo apt-get install -y iverilog tcl perl
+      - name: Verify RTL
+        run: tclsh scripts/run_sim.tcl
+      - name: Check success and failure paths
+        run: python3 -m unittest discover -s tests -v
+      - name: Upload report and log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware-verification-report
+          path: |
+            reports/index.html
+            reports/sim.log
